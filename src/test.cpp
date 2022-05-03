@@ -86,7 +86,7 @@ void cannyEdgeDetector(std::string path)
     cv::waitKey(0); 
 }
 
-void dilateOrErodeImage(std:: string path, bool dilateImg)
+void dilateOrErodeImage(std::string path, bool dilateImg)
 {
     cv::Mat imgBlur, imgCanny, imgOutput;
 
@@ -152,7 +152,24 @@ int main(int, char**)
    line(img, cv::Point(130, 296), cv::Point(382, 296), cv::Scalar(255, 255, 255), 2);
    putText(img, "Hi Yasna!", cv::Point(207, 262), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0, 69, 255), 2);
 
-   imshow("Original Image", img);
-   cv::waitKey(0); 
+   // imshow("Original Image", img);
+   // cv::waitKey(0); 
+
+   float card_width = 250;
+   float card_height = 350;
+   cv::Mat matrix , imgWarp;
+   std::string cards_path = "assets/cards.jpg";
+   cv::Mat cards_img = cv::imread(cards_path);
+
+   cv::Point2f src[4] = {{247, 188}, {397, 179}, {255, 356}, {411, 345}};
+   cv::Point2f dst[4] = {{0.0f, 0.0f}, {card_width, 0.0f}, {0.0f, card_height}, {card_width, card_height}};
+   
+   matrix = getPerspectiveTransform(src, dst);
+   warpPerspective(cards_img, imgWarp, matrix,cv::Point(card_width, card_height));
+
+   // imshow("Original Image", cards_img);
+   // imshow("Warp Image", imgWarp);
+   // cv::waitKey(0); 
+
    return 0;
 }
