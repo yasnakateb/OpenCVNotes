@@ -136,40 +136,78 @@ void cropImage(std::string path, int _x, int _y, int _width, int _height)
 
 int main(int, char**) 
 {
-   // loadImage("assets/goat.jpg");
-   // loadVideo("assets/goat.avi");
-   // convertToGray("assets/goat.jpg");
-   // blurImage("assets/goat.jpg");
-   // cannyEdgeDetector("assets/goat.jpg");
-   // dilateOrErodeImage("assets/goat.jpg", false);
-   // reSizeImage("assets/goat.jpg", 0.5, 0.7);
-   // cropImage("assets/goat.jpg", 1, 1, 50, 50); 
+    // loadImage("assets/goat.jpg");
+    // loadVideo("assets/goat.avi");
+    // convertToGray("assets/goat.jpg");
+    // blurImage("assets/goat.jpg");
+    // cannyEdgeDetector("assets/goat.jpg");
+    // dilateOrErodeImage("assets/goat.jpg", false);
+    // reSizeImage("assets/goat.jpg", 0.5, 0.7);
+    // cropImage("assets/goat.jpg", 1, 1, 50, 50); 
 
-   // Shape
-   cv::Mat img(512, 512, CV_8UC3, cv::Scalar(250, 100, 250));
-   circle (img, cv::Point (256, 256), 155, cv::Scalar(0, 69, 255), cv::FILLED);
-   rectangle(img, cv::Point(130, 226), cv::Point(382, 286), cv::Scalar(255, 255, 255), cv::FILLED);
-   line(img, cv::Point(130, 296), cv::Point(382, 296), cv::Scalar(255, 255, 255), 2);
-   putText(img, "Hi Yasna!", cv::Point(207, 262), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0, 69, 255), 2);
+    // Shape
+    cv::Mat img(512, 512, CV_8UC3, cv::Scalar(250, 100, 250));
+    circle (img, cv::Point (256, 256), 155, cv::Scalar(0, 69, 255), cv::FILLED);
+    rectangle(img, cv::Point(130, 226), cv::Point(382, 286), cv::Scalar(255, 255, 255), cv::FILLED);
+    line(img, cv::Point(130, 296), cv::Point(382, 296), cv::Scalar(255, 255, 255), 2);
+    putText(img, "Hi Yasna!", cv::Point(207, 262), cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0, 69, 255), 2);
 
-   // imshow("Original Image", img);
-   // cv::waitKey(0); 
+    // imshow("Original Image", img);
+    // cv::waitKey(0); 
 
-   float card_width = 250;
-   float card_height = 350;
-   cv::Mat matrix , imgWarp;
-   std::string cards_path = "assets/cards.jpg";
-   cv::Mat cards_img = cv::imread(cards_path);
+    float card_width = 250;
+    float card_height = 350;
+    cv::Mat matrix , imgWarp;
+    std::string cards_path = "../assets/cards.jpg";
+    cv::Mat cards_img = cv::imread(cards_path);
 
-   cv::Point2f src[4] = {{247, 188}, {397, 179}, {255, 356}, {411, 345}};
-   cv::Point2f dst[4] = {{0.0f, 0.0f}, {card_width, 0.0f}, {0.0f, card_height}, {card_width, card_height}};
+    cv::Point2f src[4] = {{247, 188}, {397, 179}, {255, 356}, {411, 345}};
+    cv::Point2f dst[4] = {{0.0f, 0.0f}, {card_width, 0.0f}, {0.0f, card_height}, {card_width, card_height}};
+
+    matrix = getPerspectiveTransform(src, dst);
+    warpPerspective(cards_img, imgWarp, matrix,cv::Point(card_width, card_height));
+
+    for (int i = 0; i < 4; i++)
+    {
+        circle (cards_img, src[i], 15, cv::Scalar(0, 69, 255), cv::FILLED);
+    }
+    // imshow("Original Image", cards_img);
+    // imshow("Warp Image", imgWarp);
+    // cv::waitKey(0); 
+
+    cv::Mat imgHSV, mask;
+    int hmin = 0;
+    int smin = 110;
+    int vmin = 153;
+    int hmax = 19;
+    int smax = 240;
+    int vmax = 255;
+
+    cvtColor(cards_img, imgHSV, cv::COLOR_BGR2HSV);
+
+    cv::Scalar lower(hmin, smin, vmin);
+    cv::Scalar upper(hmax, smax, vmax);
+    inRange(imgHSV, lower, upper, mask);
+
+    // imshow("Original Image", cards_img);
+    // imshow("HSV Image", imgHSV);
+    // imshow("Mask Image", mask);
+    // cv::waitKey(0); 
+
+    cv::namedWindow("Trackbars", (740, 500));
+    cv::createTrackbar("Hue Min", "Trackbars", &hmin, 309); 
+
+    while (true)
+    {
+       cv::Scalar lower(hmin, smin, vmin);
+       cv::Scalar upper(hmax, smax, vmax);
+       inRange(imgHSV, lower, upper, mask);
+
+       imshow("Original Image", cards_img);
+       imshow("HSV Image", imgHSV);
+       imshow("Mask Image", mask);
+       cv::waitKey(1); 
+    }
    
-   matrix = getPerspectiveTransform(src, dst);
-   warpPerspective(cards_img, imgWarp, matrix,cv::Point(card_width, card_height));
-
-   // imshow("Original Image", cards_img);
-   // imshow("Warp Image", imgWarp);
-   // cv::waitKey(0); 
-
    return 0;
 }
