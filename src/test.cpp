@@ -134,6 +134,53 @@ void cropImage(std::string path, int _x, int _y, int _width, int _height)
     cv::waitKey(0); 
 }
 
+void getContours(cv::Mat imgDilate, cv::Mat img2Draw)
+{
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    
+    findContours(imgDilate, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<std::vector<cv::Point>> conPoly(contours.size());
+    std::vector<cv::Rect> boundRectangle(contours.size());
+    std::string objType;
+    int objectCorner;
+    float aspectRatio;
+    
+    for(int i = 0; i < contours.size(); i++)
+    {
+        int shape_area = cv::contourArea(contours[i]);
+
+        // std::cout << shape_area << std::endl;
+        // Filter noise
+        if (shape_area > 1000)
+        {
+            float perimeter = arcLength(contours[i], true);
+            approxPolyDP(contours[i], conPoly[i], perimeter * 0.02, true);
+            drawContours(img2Draw, conPoly, i, cv::Scalar(200, 200), 2);
+            std::cout << conPoly[i].size() << std::endl;
+            boundRectangle[i] = cv::boundingRect(conPoly[i]);
+            
+            objectCorner = (int) conPoly[i].size();
+            if(objectCorner == 4){
+                aspectRatio = (float) boundRectangle[i].width / (float) boundRectangle[i].height;
+                if(aspectRatio < 1.05 && aspectRatio > 0.95)
+                {
+                    objType = "Square";
+                }
+                else 
+                {
+                    objType = "Rectangle";
+                }    
+                rectangle(img2Draw, boundRectangle[i].tl(), boundRectangle[i].br(), cv::Scalar(0, 255, 0), 3);
+                putText(img2Draw, objType, {boundRectangle[i].x, boundRectangle[i].y}, cv::FONT_HERSHEY_DUPLEX, 0.75, cv::Scalar(0, 69, 255), 2);
+
+            }
+            
+        }
+    }
+}
+
 int main(int, char**) 
 {
     // loadImage("assets/goat.jpg");
@@ -194,9 +241,17 @@ int main(int, char**)
     // imshow("Mask Image", mask);
     // cv::waitKey(0); 
 
+    /*
     cv::namedWindow("Trackbars", (740, 500));
-    cv::createTrackbar("Hue Min", "Trackbars", &hmin, 309); 
+    cv::createTrackbar("Hue Min", "Trackbars", &hmin, 179); 
+    cv::createTrackbar("Hue Max", "Trackbars", &hmin, 179); 
+    cv::createTrackbar("Sat Min", "Trackbars", &hmin, 255); 
+    cv::createTrackbar("Sat Max", "Trackbars", &hmin, 255); 
+    cv::createTrackbar("Val Min", "Trackbars", &hmin, 255); 
+    cv::createTrackbar("Val Max", "Trackbars", &hmin, 255); 
+    */
 
+    /*
     while (true)
     {
        cv::Scalar lower(hmin, smin, vmin);
@@ -208,6 +263,34 @@ int main(int, char**)
        imshow("Mask Image", mask);
        cv::waitKey(1); 
     }
-   
-   return 0;
+    */
+
+    std::string shapes_path = "../assets/shapes.jpg";
+    cv::Mat shapes_img = cv::imread(shapes_path);
+    // imshow("Shapes Image", shapes_img);
+    // cv::waitKey(0); 
+
+    cv::Mat imgGray;
+    cv::Mat imgBlur;
+    cv::Mat imgCanny;
+    cv::Mat imgDilate;
+    cv::Mat imgErode;
+
+    
+    cvtColor(shapes_img, imgGray, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(imgGray, imgBlur, cv::Size(3,3), 5, 0);
+    Canny(imgBlur, imgCanny, 25, 75);
+    cv::Mat kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(1,1));
+    dilate(imgCanny, imgDilate, kernel);
+    /*
+    imshow("Shapes  Image", imgDilate);
+    cv::waitKey(0);   
+    */
+    /*
+    getContours(imgDilate, shapes_img);
+    imshow("Shapes  Image", shapes_img);
+    cv::waitKey(0);  
+    */
+
+    return 0;
 }
